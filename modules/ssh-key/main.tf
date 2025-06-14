@@ -15,7 +15,7 @@ resource "aws_key_pair" "generated" {
 }
 
 # Save the private key to a .pem file
-resource "local_sensitive_file" "private_key" {
+resource "local_file" "private_key" {
   content           = tls_private_key.ssh.private_key_pem
   filename          = "${path.module}/my-key.pem"
   file_permission   = "0400"
