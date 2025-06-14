@@ -10,6 +10,14 @@ resource "aws_key_pair" "generated" {
   public_key = tls_private_key.ssh.public_key_openssh
 }
 
+# Save the private key to a .pem file
+resource "local_file" "private_key" {
+  content           = tls_private_key.ssh.private_key_pem
+  filename          = "${path.module}/my-key.pem"
+  file_permission   = "0400"
+  sensitive_content = true
+}
+
 output "key_name" {
   value = aws_key_pair.generated.key_name
 }

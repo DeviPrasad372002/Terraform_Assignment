@@ -39,3 +39,7 @@ resource "aws_instance" "private_nginx" {
 output "bastion_public_ip" {
   value = aws_instance.bastion.public_ip
 }
+
+output "private_instance_private_ip" {
+  value = aws_instance.private_nginx.private_ip
+}
