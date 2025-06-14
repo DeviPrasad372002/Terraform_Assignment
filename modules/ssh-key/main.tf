@@ -8,6 +8,10 @@ resource "tls_private_key" "ssh" {
 resource "aws_key_pair" "generated" {
   key_name   = var.key_name
   public_key = tls_private_key.ssh.public_key_openssh
+   lifecycle {
+    create_before_destroy = true
+    ignore_changes = [key_name]
+  }
 }
 
 # Save the private key to a .pem file
