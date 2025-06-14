@@ -17,6 +17,7 @@ resource "local_sensitive_file" "private_key" {
   file_permission   = "0400"
 }
 
+
 output "key_name" {
   value = aws_key_pair.generated.key_name
 }
