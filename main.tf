@@ -32,4 +32,5 @@ module "ec2" {
   bastion_sg_id      = module.networking.bastion_sg_id
   private_sg_id      = module.networking.private_sg_id
   key_name           = module.ssh_key.key_name
+  private_key_pem    = module.ssh_key.private_key_pem
 }
