@@ -3,27 +3,33 @@ resource "aws_vpc" "main" {
   tags = { Name = "custom-vpc" }
 }
 
-resource "aws_subnet" "public" {
+resource "aws_subnet" "public_a" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = "10.0.1.0/24"
-  map_public_ip_on_launch = true
   availability_zone       = "us-east-1a"
-  tags = { Name = "public-subnet" }
+  map_public_ip_on_launch = true
+  tags = { Name = "public-subnet-a" }
+}
+
+resource "aws_subnet" "public_b" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.2.0/24"
+  availability_zone       = "us-east-1b"
+  map_public_ip_on_launch = true
+  tags = { Name = "public-subnet-b" }
 }
 
 resource "aws_subnet" "private" {
   vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.2.0/24"
+  cidr_block        = "10.0.3.0/24"
   availability_zone = "us-east-1a"
   tags = { Name = "private-subnet" }
 }
 
-# Internet Gateway for public subnet
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 }
 
-# Route table for public subnet
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
 
@@ -33,9 +39,13 @@ resource "aws_route_table" "public" {
   }
 }
 
-# Associate public subnet with its route table
-resource "aws_route_table_association" "public_assoc" {
-  subnet_id      = aws_subnet.public.id
+resource "aws_route_table_association" "public_assoc_a" {
+  subnet_id      = aws_subnet.public_a.id
+  route_table_id = aws_route_table.public.id
+}
+
+resource "aws_route_table_association" "public_assoc_b" {
+  subnet_id      = aws_subnet.public_b.id
   route_table_id = aws_route_table.public.id
 }
 
@@ -45,15 +55,10 @@ resource "aws_eip" "nat" {
 
 resource "aws_nat_gateway" "nat" {
   allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public.id
+  subnet_id     = aws_subnet.public_a.id
   depends_on    = [aws_internet_gateway.igw]
-
-  tags = {
-    Name = "nat-gateway"
-  }
 }
 
-# Route table for private subnet to use NAT
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
 
@@ -63,13 +68,10 @@ resource "aws_route_table" "private" {
   }
 }
 
-# Associate private subnet with the private route table
 resource "aws_route_table_association" "private_assoc" {
   subnet_id      = aws_subnet.private.id
   route_table_id = aws_route_table.private.id
 }
-
-# === Security Groups ===
 
 resource "aws_security_group" "bastion_sg" {
   name        = "bastion-sg"
@@ -93,21 +95,14 @@ resource "aws_security_group" "bastion_sg" {
 
 resource "aws_security_group" "private_sg" {
   name        = "private-sg"
-  description = "Allow HTTP from bastion"
+  description = "Allow HTTP from ALB"
   vpc_id      = aws_vpc.main.id
 
   ingress {
-    from_port       = 80
-    to_port         = 80
-    protocol        = "tcp"
-    security_groups = [aws_security_group.bastion_sg.id]
-  }
-  ingress {
-    description     = "Allow SSH from Bastion"
-    from_port       = 22
-    to_port         = 22
-    protocol        = "tcp"
-    security_groups = [aws_security_group.bastion_sg.id]
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
@@ -118,10 +113,12 @@ resource "aws_security_group" "private_sg" {
   }
 }
 
-# === Outputs ===
+output "public_subnet_id_a" {
+  value = aws_subnet.public_a.id
+}
 
-output "public_subnet_id" {
-  value = aws_subnet.public.id
+output "public_subnet_id_b" {
+  value = aws_subnet.public_b.id
 }
 
 output "private_subnet_id" {
@@ -134,4 +131,8 @@ output "bastion_sg_id" {
 
 output "private_sg_id" {
   value = aws_security_group.private_sg.id
+}
+
+output "vpc_id" {
+  value = aws_vpc.main.id
 }

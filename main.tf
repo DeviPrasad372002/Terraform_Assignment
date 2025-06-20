@@ -1,10 +1,12 @@
 terraform {
   required_version = ">= 1.3.0"
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+
     tls = {
       source  = "hashicorp/tls"
       version = "~> 4.0"
@@ -27,10 +29,11 @@ module "ssh_key" {
 
 module "ec2" {
   source             = "./modules/ec2"
-  public_subnet_id   = module.networking.public_subnet_id
+  public_subnet_id_a = module.networking.public_subnet_id_a
+  public_subnet_id_b = module.networking.public_subnet_id_b
   private_subnet_id  = module.networking.private_subnet_id
   bastion_sg_id      = module.networking.bastion_sg_id
   private_sg_id      = module.networking.private_sg_id
   key_name           = module.ssh_key.key_name
-  private_key_pem    = module.ssh_key.private_key_pem
+  vpc_id             = module.networking.vpc_id
 }
