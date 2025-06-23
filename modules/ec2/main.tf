@@ -87,10 +87,4 @@ output "nginx_alb_dns" {
   value       = aws_lb.nginx_alb.dns_name
 }
 
-output "private_instance_private_ip" {
-  value = aws_instance.private_nginx.private_ip
-}
-output "bastion_public_ip" {
-  value = aws_instance.bastion.public_ip
-}
 
